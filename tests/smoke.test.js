@@ -40,6 +40,9 @@ test('CEP manifest resolves to a self-contained panel entry point', () => {
   }
 
   const entryPoint = resolveLocalResource(extensionRoot, mainPath[1]);
+  const scriptPath = manifest.match(/<ScriptPath>\s*([^<]+?)\s*<\/ScriptPath>/);
+  assert.ok(scriptPath, 'manifest loads the AE host entry point');
+  resolveLocalResource(extensionRoot, scriptPath[1]);
   const html = fs.readFileSync(entryPoint, 'utf8').replace(/<!--[\s\S]*?-->/g, '');
   const references = [...html.matchAll(/<(?:script|link)\b[^>]*?\b(?:src|href)\s*=\s*["']([^"']+)["']/gi)];
   assert.ok(references.length > 0, 'panel declares its local resources');

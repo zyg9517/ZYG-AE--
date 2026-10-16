@@ -22,6 +22,7 @@
       <DispatchInfo>
         <Resources>
           <MainPath>./index.html</MainPath>
+          <ScriptPath>./host/asset-workbench.jsx</ScriptPath>
         </Resources>
         <Lifecycle>
           <AutoVisible>true</AutoVisible>
