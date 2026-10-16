@@ -25,7 +25,9 @@ function validateExtension(extensionRoot) {
   }
   function attributes(tag) {
     const result = {};
-    for (const match of tag.matchAll(/([\w:-]+)\s*=\s*(["'])(.*?)\2/g)) result[match[1]] = match[3];
+    for (const match of tag.matchAll(/([\w:-]+)\s*=\s*(?:"([^"]*)"|'([^']*)'|([^\s>]+))/g)) {
+      result[match[1]] = match[2] ?? match[3] ?? match[4];
+    }
     return result;
   }
   function oneTag(xml, name) {
@@ -71,10 +73,18 @@ function validateExtension(extensionRoot) {
   }
   function checkDirectories(directory) {
     for (const entry of fs.readdirSync(directory, { withFileTypes: true })) {
-      if (entry.isDirectory()) {
+      const child = path.join(directory, entry.name);
+      const stat = fs.lstatSync(child);
+      requireValue(!stat.isSymbolicLink(), 'Directory symlink/junction is not allowed inside cep/: ' + entry.name);
+      if (stat.isDirectory()) {
         requireValue(!['dist', 'build', 'node_modules', 'src'].includes(entry.name.toLowerCase()),
           'Unexpected build/runtime directory inside cep/: ' + entry.name);
-        checkDirectories(path.join(directory, entry.name));
+        const realDirectory = fs.realpathSync(child);
+        requireValue(path.relative(root, realDirectory) !== '..' &&
+          !path.relative(root, realDirectory).startsWith('..' + path.sep) &&
+          !path.isAbsolute(path.relative(root, realDirectory)),
+          'Directory resolves outside cep/: ' + entry.name);
+        checkDirectories(realDirectory);
       }
     }
   }

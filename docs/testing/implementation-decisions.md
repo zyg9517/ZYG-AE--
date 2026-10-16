@@ -16,7 +16,7 @@
 
 ## 本次可复现证据
 
-- `npm.cmd test`：Task 5 基线为 54/54；加入 Task 6 验证器夹具后最终为 71/71。
+- `npm.cmd test`：Task 5 基线为 54/54；加入 Task 6 验证器夹具后最终为 73/73。
 - `npm.cmd run validate`：成功解析 AEFT `[17.0,17.9]`、CSXS 9 和 11 个本地资源。
 - `node --test tests/dev/validate-extension.test.js`：17/17，覆盖版本、引用闭包、越界/符号链接、注释和 CLI 失败码。
 - Chrome 静态证据来自 Task 5 报告，包含真实 HTML、长路径 Range 选择和结果页截图；不宣称 CEP/AE 通过。

@@ -51,6 +51,14 @@ test('rejects missing active scripts but ignores commented references', t => {
   assert.throws(() => validateExtension(f.root), /app\.js/);
 });
 
+test('accepts valid unquoted HTML resource attributes', t => {
+  const f = fixture(t);
+  f.edit('index.html', 'href="styles.css"', 'href=styles.css');
+  f.edit('index.html', 'src="vendor/CSInterface.js"', 'src=vendor/CSInterface.js');
+  f.edit('index.html', 'src="app.js"', 'src=app.js');
+  assert.doesNotThrow(() => validateExtension(f.root));
+});
+
 test('resolves CSS imports and assets transitively', t => {
   const f = fixture(t);
   f.write('nested.css', '@import "absent.css";');
@@ -88,6 +96,14 @@ test('rejects symlink escapes even when the referenced file exists', t => {
   fs.symlinkSync(outside, path.join(f.root, 'linked'), 'junction');
   f.edit('index.html', 'app.js', 'linked/app.js');
   assert.throws(() => validateExtension(f.root), /inside cep/);
+});
+
+test('rejects an unreferenced directory symlink or junction', t => {
+  const f = fixture(t);
+  const outside = fs.mkdtempSync(path.join(os.tmpdir(), 'zyg-validation-outside-'));
+  t.after(() => fs.rmSync(outside, { recursive: true, force: true }));
+  fs.symlinkSync(outside, path.join(f.root, 'unreferenced-link'), 'junction');
+  assert.throws(() => validateExtension(f.root), /Directory symlink\/junction/);
 });
 
 test('rejects module/build dependencies instead of promising a newer CEP runtime', t => {
