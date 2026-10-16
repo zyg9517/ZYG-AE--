@@ -1,0 +1,9 @@
+{
+  "name": "zyg-ae-asset-workbench",
+  "version": "0.1.0",
+  "private": true,
+  "description": "Asset workbench CEP panel for Windows and After Effects 2020",
+  "scripts": {
+    "test": "node --test"
+  }
+}
