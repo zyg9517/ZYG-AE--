@@ -8,12 +8,46 @@
 </head>
 <body>
   <main id="app">
-    <h1>ZYG 素材工作台</h1>
-    <p>面板骨架已就绪。</p>
+    <header>
+      <h1>ZYG 素材工作台</h1>
+      <p class="hint">检索当前 AE 项目中已导入的文件素材</p>
+    </header>
+    <form id="search-form" role="search">
+      <label for="query">素材名或源文件名</label>
+      <div class="search-controls">
+        <input id="query" type="search" placeholder="输入部分名称，留空显示全部" autocomplete="off">
+        <button id="search" type="submit">搜索</button>
+        <button id="clear" type="button">清空</button>
+      </div>
+    </form>
+    <div class="status-bar">
+      <p id="status" role="status" aria-live="polite">准备读取素材…</p>
+      <button id="refresh" type="button">刷新素材</button>
+    </div>
+    <p id="action-message" role="status" aria-live="polite"></p>
+    <div class="table-scroll" role="region" aria-label="素材搜索结果" tabindex="0">
+      <table id="result-table" hidden>
+        <caption>素材结果（完整路径可直接选择复制）</caption>
+        <thead>
+          <tr>
+            <th scope="col">项目项名称</th>
+            <th scope="col">源文件名</th>
+            <th scope="col">完整原始路径</th>
+            <th scope="col">路径状态</th>
+            <th scope="col">素材类型</th>
+            <th scope="col">操作</th>
+          </tr>
+        </thead>
+        <tbody id="results"></tbody>
+      </table>
+    </div>
   </main>
   <script src="vendor/CSInterface.js"></script>
   <script src="core/host-contract.js"></script>
+  <script src="core/asset-search.js"></script>
+  <script src="core/ui-state.js"></script>
   <script src="host-api.js"></script>
   <script src="path-actions.js"></script>
+  <script src="app.js"></script>
 </body>
 </html>
