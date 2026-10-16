@@ -244,7 +244,9 @@
 **Files:**
 - Modify: `README.md`
 - Create: `docs/testing/ae2020-manual-checklist.md`
-- Create: `scripts/validate-extension.ps1`
+- Create: `docs/testing/implementation-decisions.md`
+- Create: `scripts/validate-extension.js`
+- Create: `scripts/validate-extension.ps1` (optional thin wrapper)
 
 **Interfaces:**
 - Consumes the complete `cep/` extension and `host/asset-workbench.jsx` from Tasks 1–5.
@@ -256,7 +258,7 @@
 
 - [ ] **Step 2: Run validation before documentation changes**
 
-  Run: `powershell -ExecutionPolicy Bypass -File scripts/validate-extension.ps1`
+  Run: `node scripts/validate-extension.js` (or `npm.cmd run validate`).
 
   Expected: FAIL until all required extension files and references exist.
 
@@ -266,7 +268,7 @@
 
 - [ ] **Step 4: Run all automated checks**
 
-  Run: `npm test` and `powershell -ExecutionPolicy Bypass -File scripts/validate-extension.ps1`.
+  Run: `npm.cmd test` and `npm.cmd run validate`.
 
   Expected: all tests pass and validation reports no missing files or references.
 
@@ -275,7 +277,7 @@
   Run the checklist in AE2020 on Windows, record pass/fail evidence in the checklist, then commit:
 
   ```bash
-  git add README.md docs/testing/ae2020-manual-checklist.md scripts/validate-extension.ps1
+  git add README.md docs/testing/ae2020-manual-checklist.md docs/testing/implementation-decisions.md scripts/validate-extension.js scripts/validate-extension.ps1
   git commit -m "docs: add AE2020 validation checklist"
   ```
 

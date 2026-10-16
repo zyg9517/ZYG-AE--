@@ -4,6 +4,7 @@
   "private": true,
   "description": "Asset workbench CEP panel for Windows and After Effects 2020",
   "scripts": {
-    "test": "node --test"
+    "test": "node --test",
+    "validate": "node scripts/validate-extension.js"
   }
 }
