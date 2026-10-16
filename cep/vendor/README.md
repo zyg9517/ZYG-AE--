@@ -11,9 +11,12 @@ used by After Effects 2020. Original Adobe copyright/license notices are retaine
 | CSInterface.js | [Pinned source](https://github.com/Adobe-CEP/CEP-Resources/blob/e6a415509d021a15e1fc5daeaa60fb5fcf2a0dd1/CEP_9.x/CSInterface.js) | `a8c3a0dc2b2c60b29df36eb4b4ffd7f9819c70309c2b6105da9a2b848c348e78` |
 | CEPEngine_extensions.js | [Pinned source](https://github.com/Adobe-CEP/CEP-Resources/blob/e6a415509d021a15e1fc5daeaa60fb5fcf2a0dd1/CEP_9.x/CEPEngine_extensions.js) | `3e46c4cff687fa5194dee5cab9e2fd6fc6f9547d5e0c079f52ce578f60c8f7db` |
 
-`CSInterface.js` is loaded by the panel. `CEPEngine_extensions.js` is the SDK
-reference for CEP's built-in `cep` native APIs; it contains `native function`
-declarations and must not be loaded as an ordinary HTML script.
+`CSInterface.js` and `CEPEngine_extensions.js` are loaded by the deployed CEP
+panel. The latter is a CEP-native bridge containing `native function`
+declarations; it is valid in the AE/CEP panel runtime and must not be executed
+by a normal browser or a Node static harness. A browser-only inspection should
+use a temporary script-free copy with this native script removed, and must not
+claim `cep.process` or Explorer integration from that inspection.
 
 In `CEPEngine_extensions.js`, lines 423–445 document `createProcess` as the full
 executable path followed by its argument values. The wrapper copies JavaScript

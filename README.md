@@ -37,7 +37,10 @@ npm.cmd run validate
 不得使用原生 ES 模块或依赖 `cep/` 以外的文件。
 Node.js 仅供开发和测试使用，面板运行时不需要 Node.js。
 
-`CSInterface.js` 位于 `cep/vendor/`，是唯一的 CEP 厂商运行时依赖。
+`CSInterface.js` 和 `CEPEngine_extensions.js` 位于 `cep/vendor/`，是 CEP 厂商运行时依赖。
+后者只在 AE/CEP 面板中加载，提供 `cep.process`；普通 Chrome/Node 不能执行其中的
+`native function` 声明。运行时资源引用必须全部指向 `cep/` 内文件；README 中的外部链接
+仅是文档链接，不会被面板加载。
 
 ## 可重复校验
 
@@ -54,4 +57,6 @@ node scripts/validate-extension.js
 直接使用上面的 Node 命令，不改变执行策略或安全设置。
 
 自动化测试和 Chrome 静态 DOM/CSS 检查不能证明 CEP9、剪贴板、资源管理器或 AE 宿主行为。
+Chrome 检查应使用移除 `vendor/CEPEngine_extensions.js` 的临时无脚本副本；不能把该检查当作
+`cep.process` 或 Explorer 集成证据。
 这些边界必须按人工清单逐项记录；未直接观察到的项目保持“未验证”。

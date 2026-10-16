@@ -13,11 +13,12 @@
 9. 实机 smoke 只能在新实例、随机环境令牌已验证后操作合成测试目录；不得碰用户现有项目、安装未签名面板或开启调试标志。代价是隔离失败时只能保留未验证证据。
 10. 扩展校验器只读 `cep/`，递归检查活动 JS/CSS/JSX 引用并拒绝越界路径、构建目录、模块脚本和错误 AE/CEP 版本；不会生成输出。
 11. 现有授权覆盖 feature branch 推送和 draft PR；实现阶段不合并 main。若授权边界变化，只需关闭 PR 或保留分支，不改变 main 行为。
+12. “禁止外链”只适用于可执行扩展资源：HTML 的 `script`/`link`、CSS `@import`/`url` 和 JSX `#include` 必须解析到 `cep/` 内；Markdown/README 中的厂商文档链接仍可保留，校验器不会把文档链接当作运行时依赖。
 
 ## 本次可复现证据
 
 - `npm.cmd test`：Task 5 基线为 54/54；加入 Task 6 验证器夹具后最终为 73/73。
-- `npm.cmd run validate`：成功解析 AEFT `[17.0,17.9]`、CSXS 9 和 11 个本地资源。
+- `npm.cmd run validate`：成功解析 AEFT `[17.0,17.9]`、CSXS 9 和 12 个本地资源（包含 CEP native bridge）。
 - `node --test tests/dev/validate-extension.test.js`：17/17，覆盖版本、引用闭包、越界/符号链接、注释和 CLI 失败码。
 - Chrome 静态证据来自 Task 5 报告，包含真实 HTML、长路径 Range 选择和结果页截图；不宣称 CEP/AE 通过。
 - AE 令牌探针：子进程超时且未写入令牌验证文件；未发生项目 mutation，实机 checklist 保持“未验证”。

@@ -56,11 +56,17 @@ function validateExtension(extensionRoot) {
         const reference = match[1].toLowerCase() === 'script' ? attrs.src : attrs.href;
         if (reference) { refs.push(reference); visit(resolve(base, reference)); }
       }
-      for (const required of ['styles.css', 'vendor/CSInterface.js', 'core/host-contract.js',
-        'core/asset-search.js', 'core/ui-state.js', 'host-api.js', 'path-actions.js', 'app.js']) {
+      const requiredResources = ['styles.css', 'vendor/CSInterface.js', 'vendor/CEPEngine_extensions.js', 'core/host-contract.js',
+        'core/asset-search.js', 'core/ui-state.js', 'host-api.js', 'path-actions.js', 'app.js'];
+      for (const required of requiredResources) {
         const expected = resolve(root, required);
         requireValue(refs.some(ref => resolve(base, ref) === expected), 'Panel must load ' + required);
       }
+      const nativeReference = resolve(root, 'vendor/CEPEngine_extensions.js');
+      const pathActionsReference = resolve(root, 'path-actions.js');
+      requireValue(refs.findIndex(ref => resolve(base, ref) === nativeReference) <
+        refs.findIndex(ref => resolve(base, ref) === pathActionsReference),
+        'CEP native bridge must load before path-actions.js');
     } else if (type === '.css') {
       const css = source.replace(/\/\*[\s\S]*?\*\//g, '');
       for (const match of css.matchAll(/@import\s+(["'])(.*?)\1|url\(\s*(["']?)(.*?)\3\s*\)/gi)) {

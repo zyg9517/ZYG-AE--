@@ -59,6 +59,14 @@ test('accepts valid unquoted HTML resource attributes', t => {
   assert.doesNotThrow(() => validateExtension(f.root));
 });
 
+test('requires the CEP native bridge before path actions', t => {
+  const f = fixture(t);
+  f.edit('index.html', 'vendor/CEPEngine_extensions.js', '__NATIVE__');
+  f.edit('index.html', 'path-actions.js', 'vendor/CEPEngine_extensions.js');
+  f.edit('index.html', '__NATIVE__', 'path-actions.js');
+  assert.throws(() => validateExtension(f.root), /native bridge must load before path-actions/);
+});
+
 test('resolves CSS imports and assets transitively', t => {
   const f = fixture(t);
   f.write('nested.css', '@import "absent.css";');
