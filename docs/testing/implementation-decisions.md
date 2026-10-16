@@ -15,10 +15,12 @@
 11. 现有授权覆盖 feature branch 推送和 draft PR；实现阶段不合并 main。若授权边界变化，只需关闭 PR 或保留分支，不改变 main 行为。
 12. “禁止外链”只适用于可执行扩展资源：HTML 的 `script`/`link`、CSS `@import`/`url` 和 JSX `#include` 必须解析到 `cep/` 内；Markdown/README 中的厂商文档链接仍可保留，校验器不会把文档链接当作运行时依赖。
 
+13. 打包策略保持保守：校验器拒绝 `cep/` 内的所有符号链接和联接点，即使目标仍在 `cep/` 内；因此部署树必须使用普通文件和目录。
+
 ## 本次可复现证据
 
-- `npm.cmd test`：Task 5 基线为 54/54；加入 Task 6 验证器夹具后最终为 73/73。
-- `npm.cmd run validate`：成功解析 AEFT `[17.0,17.9]`、CSXS 9 和 12 个本地资源（包含 CEP native bridge）。
-- `node --test tests/dev/validate-extension.test.js`：17/17，覆盖版本、引用闭包、越界/符号链接、注释和 CLI 失败码。
-- Chrome 静态证据来自 Task 5 报告，包含真实 HTML、长路径 Range 选择和结果页截图；不宣称 CEP/AE 通过。
+- `npm.cmd test`：Task 5 历史基线为 54/54；Task 6 在 CEP native bridge 回归测试加入前为 73/73；当前最终 suite 为 74/74。
+- `npm.cmd run validate`：当前成功解析 AEFT `[17.0,17.9]`、CSXS 9 和 12 个本地资源（包含 CEP native bridge）。
+- `node --test tests/dev/validate-extension.test.js`：当前 20/20，覆盖版本、引用闭包、越界/符号链接与联接点、注释、CEP native bridge 顺序和 CLI 失败码。
+- Chrome 静态证据是 Task 5 在 CEP native bridge/CEP-only 原生声明加入入口之前进行的历史检查：当时入口尚未加载 CEP native bridge 或其 CEP-only 原生声明；Chrome 打开的是该历史入口，结果页/Range 证据来自另一个临时 script-free HTML 副本。它不检查当前含 native declarations 的 `cep/index.html`，也不能证明 CEP runtime。
 - AE 令牌探针：子进程超时且未写入令牌验证文件；未发生项目 mutation，实机 checklist 保持“未验证”。

@@ -37,7 +37,7 @@
 
 ## 证据边界
 
-- Node 测试：Task 5 基线覆盖 54 项；加入 Task 6 校验器夹具后最终覆盖 73 项，包括 host JSON/选择、搜索、路径动作、UI 状态和扩展引用校验；不等于 AE2020 实机通过。
+- Node 测试：Task 5 历史基线覆盖 54 项；Task 6 在 CEP native bridge 回归测试加入前累计 73 项；当前最终 suite 为 74/74，包括 host JSON/选择、搜索、路径动作、UI 状态和扩展引用校验；不等于 AE2020 实机通过。
 - `npm.cmd run validate`：验证 12 个仓库内资源、manifest 目标、CEP native bridge 顺序和引用闭包；不等于 CEP 加载通过。
-- Chrome 静态检查：复用 Task 5 的真实 `cep/index.html` 结果页截图/Range 选择证据；不证明 Chromium 61、CEP 剪贴板或 Explorer 行为。
+- Chrome 静态检查：Task 5 在 CEP native bridge/CEP-only 原生声明加入入口之前进行的历史检查，当时入口尚未加载 CEP native bridge 或其 CEP-only 原生声明；Chrome 打开的是该历史入口，结果页/Range 证据来自另一个临时 script-free HTML 副本。不检查当前含 native declarations 的 `cep/index.html`，也不能证明 CEP runtime、Chromium 61、CEP 剪贴板或 Explorer 行为。
 - AE 探针：曾用子进程环境令牌和 `-m -r` 尝试只读启动，25 秒内未生成令牌验证文件；未创建、导入、保存或修改项目，因此 AE JSX/CEP 实机行为仍未验证。

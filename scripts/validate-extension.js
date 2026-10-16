@@ -81,6 +81,7 @@ function validateExtension(extensionRoot) {
     for (const entry of fs.readdirSync(directory, { withFileTypes: true })) {
       const child = path.join(directory, entry.name);
       const stat = fs.lstatSync(child);
+      // Conservative packaging policy: reject every symlink/junction, including in-tree targets.
       requireValue(!stat.isSymbolicLink(), 'Directory symlink/junction is not allowed inside cep/: ' + entry.name);
       if (stat.isDirectory()) {
         requireValue(!['dist', 'build', 'node_modules', 'src'].includes(entry.name.toLowerCase()),

@@ -10,6 +10,8 @@
 
 **Spec:** `scope.md`
 
+**Status:** Implementation, documentation, and automated validation are complete through commit `9593a8a`. Live AE2020/CEP acceptance remains **blocked and unverified**; no runtime PASS is claimed.
+
 ## Global Constraints
 
 - Target host is **Adobe After Effects 2020, Windows 64-bit**.
@@ -43,27 +45,27 @@
 - Produces the extension root `cep/` that AE2020 can load and the `npm test` command used by later tasks.
 - Defines `AssetRecord` fixture fields used by core and adapter tests: `projectItemId`, `itemName`, `sourceName`, `absolutePath`, `sourceType`, `pathStatus`.
 
-- [ ] **Step 1: Write the failing smoke test**
+- [x] **Step 1: Write the failing smoke test**
 
   Add `tests/smoke.test.js` with a test that imports the fixture and asserts the six required `AssetRecord` keys exist.
 
-- [ ] **Step 2: Run the test to verify it fails**
+- [x] **Step 2: Run the test to verify it fails**
 
   Run: `npm test -- --test-name-pattern="asset record fixture"`
 
   Expected: FAIL because the test harness, fixture, and package script do not exist.
 
-- [ ] **Step 3: Add the minimal project skeleton**
+- [x] **Step 3: Add the minimal project skeleton**
 
   Configure `package.json` with the Node built-in test runner (`node --test`), create the fixture, add the CEP panel manifest targeting AE `17.0`, and create a minimal HTML shell with a root element and script/style references. Keep `CSInterface.js` as an explicit vendor dependency to be added in Task 4 from the official CEP SDK.
 
-- [ ] **Step 4: Run the smoke test to verify it passes**
+- [x] **Step 4: Run the smoke test to verify it passes**
 
   Run: `npm test -- --test-name-pattern="asset record fixture"`
 
   Expected: PASS.
 
-- [ ] **Step 5: Commit**
+- [x] **Step 5: Commit**
 
   ```bash
   git add package.json cep/CSXS/manifest.xml cep/index.html cep/styles.css tests/fixtures/assets.js tests/smoke.test.js README.md
@@ -80,7 +82,7 @@
 - Consumes: `AssetRecord[]` from Task 1.
 - Produces: `filterAssets(records: AssetRecord[], query: string): AssetRecord[]`, preserving input order and returning the original record objects.
 
-- [ ] **Step 1: Write the failing tests**
+- [x] **Step 1: Write the failing tests**
 
   Cover `filterAssets` with these assertions:
 
@@ -90,23 +92,23 @@
   - A query with no match returns `[]`.
   - Records with `pathStatus: "not_applicable"` are excluded from the result.
 
-- [ ] **Step 2: Run the tests to verify they fail**
+- [x] **Step 2: Run the tests to verify they fail**
 
   Run: `npm test -- tests/core/asset-search.test.js`
 
   Expected: FAIL because `src/core/asset-search.js` is missing.
 
-- [ ] **Step 3: Implement `filterAssets`**
+- [x] **Step 3: Implement `filterAssets`**
 
   Trim the query, compare lowercased `itemName` and `sourceName`, skip `not_applicable` records, and do not sort or mutate the input.
 
-- [ ] **Step 4: Run the tests to verify they pass**
+- [x] **Step 4: Run the tests to verify they pass**
 
   Run: `npm test -- tests/core/asset-search.test.js`
 
   Expected: PASS.
 
-- [ ] **Step 5: Commit**
+- [x] **Step 5: Commit**
 
   ```bash
   git add src/core/asset-search.js tests/core/asset-search.test.js
@@ -129,27 +131,27 @@
 - Produces records with `pathStatus` values `exists`, `missing`, `unreadable`, or `not_applicable`.
 - Consumes no browser or DOM APIs.
 
-- [ ] **Step 1: Write contract tests**
+- [x] **Step 1: Write contract tests**
 
   Add fixture-level tests for `parseHostResponse`: parse a successful payload and a `{ code: "NO_PROJECT" }` error payload, reject malformed JSON and missing fields, require stable numeric `projectItemId`, and assert that missing paths retain `absolutePath` while `pathStatus` is `missing`.
 
-- [ ] **Step 2: Run the tests to verify they fail**
+- [x] **Step 2: Run the tests to verify they fail**
 
   Run: `npm test -- tests/host/asset-contract.test.js`
 
   Expected: FAIL because `src/core/host-contract.js` is missing.
 
-- [ ] **Step 3: Implement the ExtendScript host module**
+- [x] **Step 3: Implement the ExtendScript host module**
 
   Iterate `app.project.items` only when a project is open. Include file-backed `FootageItem` records, use the first file/folder path exposed by AE for sequences, classify non-file sources as `not_applicable`, and check existence without changing files. Catch host exceptions and return JSON errors. `selectProjectItem` must validate the numeric ID, select the item in the project, and return a result without changing project contents.
 
-- [ ] **Step 4: Run contract tests and static syntax checks**
+- [x] **Step 4: Run contract tests and static syntax checks**
 
   Run: `npm test -- tests/host/asset-contract.test.js` and verify the JSX file has balanced braces and no browser-only globals.
 
   Expected: PASS for the JSON contract tests; the JSX syntax check reports no parse errors.
 
-- [ ] **Step 5: Commit**
+- [x] **Step 5: Commit**
 
   ```bash
   git add host/asset-workbench.jsx src/core/host-contract.js tests/host/asset-contract.test.js tests/fixtures/assets.js
@@ -172,27 +174,27 @@
 - `pathActions.toFileUrl(path: string): string` converts a Windows folder path to an escaped `file:///` URL.
 - `pathActions.reveal(path: string, pathStatus: string): void` opens the containing folder only for `pathStatus: "exists"`.
 
-- [ ] **Step 1: Write failing path-action tests**
+- [x] **Step 1: Write failing path-action tests**
 
   Test exact path preservation for long paths and quotes, trimming only for the containing-folder calculation, rejecting empty paths, and converting Windows folder paths to escaped `file:///` URLs.
 
-- [ ] **Step 2: Run the tests to verify they fail**
+- [x] **Step 2: Run the tests to verify they fail**
 
   Run: `npm test -- tests/cep/path-actions.test.js`
 
   Expected: FAIL because the path action module is missing.
 
-- [ ] **Step 3: Implement the bridge and path actions**
+- [x] **Step 3: Implement the bridge and path actions**
 
   Keep all `CSInterface` calls in `host-api.js`; keep clipboard and `openURL` behavior in `path-actions.js`. Do not call ExtendScript from UI rendering code. Disable reveal for missing/unreadable paths and surface structured errors to the caller.
 
-- [ ] **Step 4: Run the tests to verify they pass**
+- [x] **Step 4: Run the tests to verify they pass**
 
   Run: `npm test -- tests/cep/path-actions.test.js`
 
   Expected: PASS.
 
-- [ ] **Step 5: Commit**
+- [x] **Step 5: Commit**
 
   ```bash
   git add cep/vendor/CSInterface.js cep/host-api.js cep/path-actions.js tests/cep/path-actions.test.js cep/index.html
@@ -212,27 +214,27 @@
 - Consumes `filterAssets` from Task 2, `hostApi` from Task 4, and `pathActions` from Task 4.
 - Produces `deriveViewState(records: AssetRecord[], query: string): ViewState` in `src/core/ui-state.js`, plus DOM event adapters in `cep/app.js`. Rendering functions consume plain records and never receive AE objects.
 
-- [ ] **Step 1: Write failing UI-state tests**
+- [x] **Step 1: Write failing UI-state tests**
 
   Test `deriveViewState` for loaded count, empty query showing all records, no match preserving the query, and a missing path disabling reveal; test the result-selection adapter calls `hostApi.selectItem` with its `projectItemId`.
 
-- [ ] **Step 2: Run the tests to verify they fail**
+- [x] **Step 2: Run the tests to verify they fail**
 
   Run: `npm test -- tests/cep/ui-state.test.js`
 
   Expected: FAIL because `src/core/ui-state.js` and `cep/app.js` are missing.
 
-- [ ] **Step 3: Implement the panel UI**
+- [x] **Step 3: Implement the panel UI**
 
   Add one search input, search/clear controls, a result table with full-path copy, select, and reveal actions, plus explicit empty/error states. Load assets on panel start and after a recoverable host error. Keep DOM event handlers as adapters over the module interfaces.
 
-- [ ] **Step 4: Run tests and perform a browser-level static check**
+- [x] **Step 4: Run tests and perform a browser-level static check**
 
   Run: `npm test -- tests/cep/ui-state.test.js` and open `cep/index.html` in a normal browser for markup/CSS inspection only.
 
   Expected: PASS; all controls have labels and the result path remains selectable/copyable at long lengths.
 
-- [ ] **Step 5: Commit**
+- [x] **Step 5: Commit**
 
   ```bash
   git add cep/app.js src/core/ui-state.js cep/index.html cep/styles.css tests/cep/ui-state.test.js
@@ -252,34 +254,30 @@
 - Consumes the complete `cep/` extension and `host/asset-workbench.jsx` from Tasks 1–5.
 - Produces a repeatable validation command and an AE2020 manual acceptance checklist; it does not add runtime behavior.
 
-- [ ] **Step 1: Write validation checks**
+- [x] **Step 1: Write validation checks**
 
   Add checks for required manifest fields, the host JSX entry point, `index.html` script references, and the absence of build output that would be required by a different AE version.
 
-- [ ] **Step 2: Run validation before documentation changes**
+- [x] **Step 2: Run validation before documentation changes**
 
   Run: `node scripts/validate-extension.js` (or `npm.cmd run validate`).
 
   Expected: FAIL until all required extension files and references exist.
 
-- [ ] **Step 3: Add manual AE2020 acceptance steps**
+- [x] **Step 3: Add manual AE2020 acceptance steps**
 
   Document loading the panel, a project with at least three file assets, mixed-case search, sequence source, missing path, project-item selection, copy, reveal, and no-project behavior. Include the exact expected result for each step.
 
-- [ ] **Step 4: Run all automated checks**
+- [x] **Step 4: Run all automated checks**
 
   Run: `npm.cmd test` and `npm.cmd run validate`.
 
   Expected: all tests pass and validation reports no missing files or references.
 
-- [ ] **Step 5: Complete the manual AE2020 check and commit**
+- [ ] **Step 5: Complete the manual AE2020 check and commit** *(live acceptance remains blocked/unverified; implementation commit is complete)*
 
-  Run the checklist in AE2020 on Windows, record pass/fail evidence in the checklist, then commit:
+  Run the checklist in AE2020 on Windows and record direct pass/fail evidence in the checklist. The documentation commit is already complete; keep this step open until the live acceptance is directly observed.
 
-  ```bash
-  git add README.md docs/testing/ae2020-manual-checklist.md docs/testing/implementation-decisions.md scripts/validate-extension.js scripts/validate-extension.ps1
-  git commit -m "docs: add AE2020 validation checklist"
-  ```
 
 ## Self-Review
 
