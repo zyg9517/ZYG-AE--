@@ -28,6 +28,7 @@
 - **Sequence boundary and partial metadata:** same-directory pattern matching must exclude unrelated files and show a partial/unreadable state when a matched frame cannot be read. Tested in Task 2 host metadata tests.
 - **Missing/unreadable source files:** old paths remain visible, metadata becomes unavailable, and the panel remains recoverable. Tested in Task 2 and Task 5 detail-state tests.
 - **Nested/cyclic compositions and unreadable effects:** direct layer order remains stable, nested nodes load lazily, cycles stop at the repeated path, and one bad effect does not discard the rest. Tested in Task 3 host tests and Task 5 tree tests.
+- **Footage-node details and response envelopes:** expanding a footage node uses the asset-detail adapter without selecting AE state, and every new host success response uses fixed payload keys. Tested in Tasks 4–5.
 - **Stale or invalid Render Queue IDs:** switched projects, deleted items, non-composition IDs, and malformed responses must not enqueue anything. Tested in Task 3 and Task 4.
 - **CEP9 regression and transport isolation:** old asset/path workflows, UMD loading, stale async responses, and local resource validation continue to pass. Tested in Task 5 and Task 6.
 
@@ -101,11 +102,12 @@
 - Keep `collectAssetRecords()` and `selectProjectItem()` behavior intact. Share a project-identity cache without allowing a composition collection or detail request to reuse an item from another project.
 - For ordinary files, read `File.length` and `File.created.getTime()` into `sizeBytes` and `createdAtEpochMs`; return null plus a precise metadata status when a property is missing or throws.
 - For a recognized sequence, parse the AE source file name into prefix/numeric suffix/extension, enumerate only `sourceFile.parent.getFiles()`, include direct `File` entries with the same case-insensitive prefix and extension plus a numeric suffix, and aggregate actual readable files. Return `matchedFrameCount`, `totalSizeBytes`, and earliest/latest creation epochs. Mark the result partial if a matched frame cannot be read and unreadable if the directory cannot be enumerated.
+- For a recognized sequence, `matchedFrameCount` counts every matching direct file entry that exists. If any matching entry cannot be read, serialize the aggregate size and date-range fields as `null` with `status:"partial"`; the UI must show the count and an explicit partial/unavailable state rather than presenting incomplete totals as complete. If the directory cannot be enumerated, serialize `matchedFrameCount` and all aggregate fields as `null` with `status:"unreadable"`.
 - Use the existing ES3-safe serializer; never serialize `File`, `Folder`, `Date`, or AE native objects directly.
 
 - [ ] **Step 1: Add failing host tests with fake ES3 File/Folder objects**
 
-  Add fixtures for an ordinary file, a complete sequence with unrelated files and subdirectories, a missing source, a throwing metadata property, and a partially unreadable matching frame. Assert the exact plain response fields, aggregate counts/sizes/date range, old-path preservation, and stale/non-file rejection.
+  Add fixtures for an ordinary file, a complete sequence with unrelated files and subdirectories, a missing source, a throwing metadata property, and a partially unreadable matching frame. Assert the exact plain response fields, aggregate counts/sizes/date range, null aggregate fields plus explicit `partial`/`unreadable` statuses, old-path preservation, and stale/non-file rejection.
 
 - [ ] **Step 2: Run the host metadata tests and verify they fail**
 
@@ -140,11 +142,12 @@
 - Add `ZYGAssetWorkbench.collectCompositionSummaries()` returning `CompositionSummary[]` for current-project `CompItem`s only, with stable IDs and `itemType:"composition"`.
 - Add `ZYGAssetWorkbench.getCompositionDetails(projectItemId)` returning direct `CompositionDetails` for a collected composition. Include width, height, duration, frame rate, layer count, layer order, source IDs/names/types, and readable applied effects (`name`, `matchName`, `status`). Do not recursively traverse here; the CEP tree adapter requests nested compositions lazily.
 - Add `ZYGAssetWorkbench.enqueueComposition(projectItemId)` that validates current-project identity and a collected `CompItem`, calls `app.project.renderQueue.items.add(comp)` exactly once, and returns the created queue-item index without calling render, changing output modules, saving, or touching existing queue items.
+- Serialize successful host responses with fixed envelopes: `collectCompositionSummaries()` returns `{ok:true, compositions:CompositionSummary[]}`, `getCompositionDetails(id)` returns `{ok:true, composition:CompositionDetails}`, and `enqueueComposition(id)` returns `{ok:true, queueItemIndex:number}`. All failures use the existing `{ok:false, code:string, message:string}` shape.
 - Classify direct layer sources as `footage`, `composition`, `solid`, `text`, `shape`, `other`, or `unavailable`. Catch per-layer source/effect failures and continue. Treat `ADBE Effect Parade` as applied-effect data only.
 
 - [ ] **Step 1: Add failing composition host tests**
 
-  Build fake `CompItem`, layer, effect-parade, project, and Render Queue objects. Assert composition summaries exclude footage, direct layers preserve order, nested comp references are returned without recursion, solids/text/shapes are typed, one unreadable effect becomes `status:"unavailable"` without dropping other effects, stale/non-composition IDs fail, and one enqueue call adds one item without calling `render()` or changing an existing entry.
+  Build fake `CompItem`, layer, effect-parade, project, and Render Queue objects. Assert composition summaries use the `compositions` envelope and exclude footage, direct layers preserve order, nested comp references are returned without recursion, solids/text/shapes are typed, one unreadable effect becomes `status:"unavailable"` without dropping other effects, stale/non-composition IDs fail, and one enqueue call returns the `queueItemIndex` envelope, adds one item without calling `render()`, and does not change an existing entry.
 
 - [ ] **Step 2: Run composition host tests and verify they fail**
 
@@ -179,6 +182,7 @@
 
 **Interfaces:**
 - Preserve `parseHostResponse(raw, 'collect')` and `parseHostResponse(raw, 'select')` exactly; add operation-specific validation for `'asset-details'`, `'compositions'`, `'composition-details'`, and `'enqueue'`.
+- Validate the fixed success payload keys: `asset` for `'asset-details'`, `compositions` for `'compositions'`, `composition` for `'composition-details'`, and numeric `queueItemIndex` for `'enqueue'`; continue to accept the structured error envelope for each operation.
 - Validate `AssetDetails` fields, `SequenceStatistics` invariants, `CompositionSummary` IDs/types, `CompositionDetails` numeric summary, layer/source/effect shapes, and structured errors without accepting AE native values or duplicate IDs.
 - Extend `createHostApi(options)` with `getAssetDetails(projectItemId)`, `loadCompositions()`, `getCompositionDetails(projectItemId)`, and `enqueueComposition(projectItemId)`. Each method must reject or return the existing structured error style for invalid IDs, quote no user input into scripts, and use the configured timeout.
 - Use exact host scripts: `ZYGAssetWorkbench.getAssetDetails(<id>)`, `ZYGAssetWorkbench.collectCompositionSummaries()`, `ZYGAssetWorkbench.getCompositionDetails(<id>)`, and `ZYGAssetWorkbench.enqueueComposition(<id>)`.
@@ -226,11 +230,11 @@
 - Refresh starts the asset and composition loads independently, applies the current trimmed query to the active result view, and uses separate generation guards so late responses cannot overwrite newer state. A composition-list failure must not clear or disable the existing asset results/actions, and an asset-list failure must not hide a successfully loaded composition list.
 - Clicking an asset result requests `getAssetDetails(id)` and renders full path, exact/readable size, creation time or sequence range/count, and metadata status; existing select/copy/reveal buttons remain separate and functional.
 - Clicking a composition result requests `getCompositionDetails(id)`, renders **加入渲染队列** before summary/hierarchy, and initializes a tree whose root is expanded. Clicking the queue button calls `enqueueComposition(id)` once and displays a recoverable success/error message.
-- Expanding a nested-composition node calls `getCompositionDetails(id)` only when needed, merges its direct layers into the pure tree model, and renders nested assets/effects. Cycle markers are visible but not expandable. No detail click calls `selectItem`.
+- Expanding a nested-composition node calls `getCompositionDetails(id)` only when needed, merges its direct layers into the pure tree model, and renders nested assets/effects. Expanding a footage node calls `getAssetDetails(sourceItemId)` and renders the same path/metadata view as an asset result; it never calls `selectItem`. Cycle markers are visible but not expandable. For `metadataStatus:"partial"`, the UI shows the matched-frame count and explicit partial/unavailable status while not presenting null aggregate values as complete totals. No detail click calls `selectItem`.
 
 - [ ] **Step 1: Add failing UI/state tests**
 
-  Extend the DOM fixture to cover tabs and detail containers. Test asset-detail loading/success/error, sequence aggregate rendering, composition summary loading, independent asset/composition load failures, queue-button order and one-call behavior, lazy nested expansion, cycle marker behavior, effect rendering, no-AE-selection side effects, stale response suppression, and preservation of existing copy/reveal/selection tests.
+  Extend the DOM fixture to cover tabs and detail containers. Test asset-detail loading/success/error, sequence aggregate and partial-status rendering, composition summary loading, fixed success-envelope parsing, independent asset/composition load failures, queue-button order and one-call behavior, lazy nested expansion, footage-node metadata expansion through `getAssetDetails`, cycle marker behavior, effect rendering, no-AE-selection side effects, stale response suppression, and preservation of existing copy/reveal/selection tests.
 
 - [ ] **Step 2: Run UI tests and verify they fail**
 
@@ -336,8 +340,8 @@ Run Tasks 1–2 first because the pure detail contract and asset metadata adapte
 
 ## Self-Review
 
-- **Spec coverage:** Asset metadata and sequence aggregation map to Tasks 1–2; composition summaries/details/effects/cycle-safe lazy expansion map to Tasks 1, 3, and 5; queue semantics map to Tasks 3–5; module boundaries and error behavior map to Tasks 2–6; acceptance evidence maps to Task 7.
+- **Spec coverage:** Asset metadata, partial sequence presentation, and footage-node metadata expansion map to Tasks 1–2 and 5; composition summaries/details/effects/cycle-safe lazy expansion map to Tasks 1, 3, and 5; fixed host response envelopes map to Tasks 3–4; queue semantics map to Tasks 3–5; module boundaries and error behavior map to Tasks 2–6; acceptance evidence maps to Task 7.
 - **Step scan:** Tasks 1–6 have a failing test, minimal implementation, passing verification, and commit; Task 7 verifies deployment and live host behavior separately because those observations cannot be reduced to unit tests. Host actions, bridge validation, UI state, and packaging have separate boundaries.
-- **Type consistency:** `AssetDetails`, `SequenceStatistics`, `CompositionSummary`, `CompositionDetails`, `CompositionLayer`, and `AppliedEffect` are named in Task 1 and consumed by Tasks 2–5; bridge operation names are fixed in Task 4 and used by Task 5.
+- **Type consistency:** `AssetDetails`, `SequenceStatistics`, `CompositionSummary`, `CompositionDetails`, `CompositionLayer`, and `AppliedEffect` are named in Task 1 and consumed by Tasks 2–5; bridge operation names and success envelope keys are fixed in Tasks 3–4 and used by Task 5.
 - **Review focus:** Each listed failure mode has a named test owner in Tasks 2–5; packaging/CEP regressions have explicit Task 6 tests.
 - **Proportion:** The plan records file boundaries, contracts, tests, and verification commands while leaving implementation bodies to the executor.
